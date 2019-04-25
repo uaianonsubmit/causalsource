@@ -1,0 +1,10 @@
+name = "CanSee"
+uuid = "de2fcff4-2b0b-11e9-10a4-cb95ae96a049"
+authors = ["Anon submit"]
+version = "0.1.0"
+
+[deps]
+Callbacks = "db1e321a-d383-57b4-a664-0144fd54e973"
+GeometryTypes = "4d00f742-c7ba-57c2-abde-4428a4b178cb"
+Omega = "1af16e33-887a-59b3-8344-18f1671b3ade"
+RayTrace = "9441d024-97fe-11e8-2154-4d1b79854d30"
