@@ -1,3 +1,5 @@
+module CanSeeInvRaytrace
+
 include("common.jl")
 
 using Callbacks
@@ -13,15 +15,11 @@ using CanSee
 using Images
 using Plots
 
-# using JLD2
-# const DATADIR = ENV["DATADIR"]
-# @load "theres.jld2"
-
 "Generate 500 samples using inverse graphics"
-generatedata() = InvRayTrace.sampleposterior_noi(500; noi = false, alg = SSMH, gamma = 100.0)
+generatedata() = InvRayTrace.sampleposterior_noi(500; noi = false, alg = SSMH, gamma = 100.0);
 
 "High resolution render of scene"
-highresrender(sc) = RayTrace.rgb.(RayTrace.render(sc; width = 1024, height = 1024))
+highresrender(sc) = RayTrace.rgb.(RayTrace.render(sc; width = 1024, height = 1024));
 
 # ### Actual Causation
 # In this example we use counterfactuals to determine whether a is the cause of b.
@@ -38,45 +36,54 @@ highresrender(sc) = RayTrace.rgb.(RayTrace.render(sc; width = 1024, height = 102
 samples = generatedata()
 
 # Visualize a single sample from the posterior
-ls = samples[end]
-ImageView.imshow(highresrender(ls))
+scene_sample = samples[end]
+highresrender(scene_sample)
 
 # From a copy of the scene take a single object, Remove object with id gid from scene
-ls2 = deepcopy(ls)
+scene_sample2 = deepcopy(scene_sample)
 gid = 1
-ls3 = RayTrace.ListScene([g for (i, g) in enumerate(ls2.geoms) if i!=gid])
 
-k = ls.geoms[gid]
+# Create a new scene `scene_sample3` which has object which has the gid'th object removed
+scene_sample3 = RayTrace.ListScene([g for (i, g) in enumerate(scene_sample2.geoms) if i!=gid])
+k = scene_sample.geoms[gid];
 
 # We will add a white ball into the scene inside of k 
 
 # Define the material colour white
-white = RayTrace.Material(Vec3(1.0, 1.0, 0.0), 0.5, 0.0, Vec3(0.0, 0.0, 0.0))
+white = RayTrace.Material(Vec3(1.0, 1.0, 0.0), 0.5, 0.0, Vec3(0.0, 0.0, 0.0));
 
-# Create a new white sphere `mg` at position of `k` but a fraction `frac` of the size
+# Create a new white sphere `objb` at position of `k` but a fraction `frac` of the size
 frac = 0.8
-mg = RayTrace.MaterialGeom(Sphere(k.center, k.r*frac), white)
+objb = RayTrace.MaterialGeom(Sphere(k.center, k.r*frac), white)
 
 # Add the new sphere to the scene
-push!(ls2.geoms, mg)
+push!(scene_sample2.geoms, objb)
+
+# Inspect which element of the scene are visible
+
+# The module [CanSee](https://github.com/uaianonsubmit/causalsource/blob/master/CanSee/src/CanSee.jl) defines the predicate `cansee(scene, obj)` which returns a (soft) Boolean over whether `obj` is visible in `scene`
+# It projects rays from the viewpoint of the observer and tests for each object whether there is a ray which hits it 
 
 "For each element in scene determine if it can be seen"
 canseein(scene) = [Bool(CanSee.cansee(scene, scene.geoms[i])) for i = 1:length(scene.geoms)]
-
-canseein(ls2)
+canseein(scene_sample2)
 
 # ### 2. Actual Causality
 
 # Is fact that object a is where it is,  reason we can't see object b?
 objacenter = constant(k.center)
 obja = ciid(ω -> RayTrace.MaterialGeom(Sphere(objacenter(ω), k.r), k.material))
-objb = mg
 
-sc = ciid(ω -> RayTrace.ListScene([[g for (i, g) in enumerate(ls2.geoms) if i != gid] ; obja(ω)] ))
+sc = ciid(ω -> RayTrace.ListScene([[g for (i, g) in enumerate(scene_sample2.geoms) if i != gid] ; obja(ω)] ))
 cantseeb = ciid(ω -> !CanSee.cansee(sc(ω), objb))
 
 # Check is fact that in some world ω, is fact that obja where it is cause that we can't see object b
 ω = defΩ()()
+
+# Now we will check for but-for cause.
+# This is defined in our extension of Omega [here](https://github.com/uaianonsubmit/causalsource/blob/master/Omega.jl/src/causal/causes.jl)
+
 # CanSee.iscausebf(ω, objacenter ==ₛ objacenter(ω), cantseeb, [objacenter];
 #                  sizes = [3],
 #                  proj = v -> Point(v[1], v[2], v[3]), init = () -> [k.center.data...])
+end
