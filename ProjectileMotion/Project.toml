@@ -1,6 +1,6 @@
 name = "ProjectileMotion"
 uuid = "d0a5cb5f-0e24-5fb2-bbbf-a8f31d6ac29e"
-authors = ["Anon"]
+authors = ["anon"]
 version = "0.1.0"
 
 [deps]
