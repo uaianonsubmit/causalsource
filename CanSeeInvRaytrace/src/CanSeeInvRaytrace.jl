@@ -33,7 +33,7 @@ highresrender(sc) = RayTrace.rgb.(RayTrace.render(sc; width = 1024, height = 102
 # ### 1. Inverse Graphics
 
 # Sample from the posterior of scenes
-samples = generatedata()
+samples = generatedata();
 
 # Visualize a single sample from the posterior
 scene_sample = samples[end]
@@ -57,7 +57,7 @@ frac = 0.8
 objb = RayTrace.MaterialGeom(Sphere(k.center, k.r*frac), white)
 
 # Add the new sphere to the scene
-push!(scene_sample2.geoms, objb)
+push!(scene_sample2.geoms, objb);
 
 # Inspect which element of the scene are visible
 
